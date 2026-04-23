@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Brunelly CMS — Content Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@200;300&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--black:#09090b;--off-black:#111114;--surface:#16161a;--border:rgba(255,255,255,.07);--white:#f4f4f5;--muted:#71717a;--light:#b4b4be;--accent:#a78bfa;--accent-dim:rgba(167,139,250,.12);--accent-mid:rgba(167,139,250,.4);--green:#4ade80;--green-dim:rgba(74,222,128,.12);--green-mid:rgba(74,222,128,.3);--red:#f87171;--red-dim:rgba(248,113,113,.1);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--white);font-family:"DM Sans",sans-serif;font-weight:300;line-height:1.6;min-height:100vh;}
+#login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:3rem;width:360px;text-align:center;}
+.login-logo{font-family:"Geologica",sans-serif;font-weight:200;font-size:1.6rem;letter-spacing:.02em;margin-bottom:.3rem;}
+.login-sub{font-family:"DM Mono",monospace;font-size:.68rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:2rem;}
+.login-input{width:100%;font-family:"DM Mono",monospace;font-size:.85rem;padding:.75rem 1rem;background:var(--off-black);border:1px solid var(--border);border-radius:8px;color:var(--white);outline:none;text-align:center;letter-spacing:.15em;transition:border-color .2s;margin-bottom:1rem;}
+.login-input:focus{border-color:var(--accent-mid);}
+.login-btn{width:100%;font-family:"DM Mono",monospace;font-size:.78rem;letter-spacing:.06em;padding:.85rem;background:var(--accent);border:none;border-radius:8px;color:var(--black);cursor:pointer;font-weight:500;transition:all .2s;}
+.login-btn:hover{background:#c4b5fd;}
+.login-err{font-family:"DM Mono",monospace;font-size:.7rem;color:var(--red);margin-top:.8rem;display:none;}
+#app{display:none;}
+.cms-header{position:sticky;top:0;z-index:50;background:rgba(9,9,11,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 2.5rem;height:64px;display:flex;align-items:center;justify-content:space-between;gap:2rem;}
+.cms-title{font-family:"Geologica",sans-serif;font-weight:200;font-size:1.1rem;letter-spacing:.02em;}
+.cms-title span{color:var(--accent);}
+.cms-actions{display:flex;gap:.7rem;align-items:center;}
+.btn{font-family:"DM Mono",monospace;font-size:.72rem;letter-spacing:.05em;padding:.45rem .9rem;border-radius:6px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:inline-flex;align-items:center;}
+.btn-primary{background:var(--accent);color:var(--black);font-weight:500;}
+.btn-primary:hover{background:#c4b5fd;}
+.btn-ghost{background:none;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--white);border-color:rgba(255,255,255,.2);}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+.btn-danger:hover{background:rgba(248,113,113,.2);}
+.btn-success{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.3);}
+.btn-success:hover{background:rgba(74,222,128,.2);}
+.cms-body{max-width:1300px;margin:0 auto;padding:2.5rem;}
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2rem;}
+.stat-card{background:var(--off-black);padding:1.3rem;}
+.stat-num{font-family:"Geologica",sans-serif;font-weight:200;font-size:1.8rem;letter-spacing:-.02em;color:var(--accent);}
+.stat-label{font-family:"DM Mono",monospace;font-size:.6rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:.25rem;}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:2rem;}
+.tab{font-family:"DM Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.85rem 1.4rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;}
+.tab:hover{color:var(--white);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.table-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;}
+.table-toolbar h2{font-family:"Geologica",sans-serif;font-weight:200;font-size:1.2rem;letter-spacing:-.01em;}
+.data-table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.data-table th{font-family:"DM Mono",monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.85rem 1.1rem;text-align:left;background:var(--surface);color:var(--muted);border-bottom:1px solid var(--border);}
+.data-table td{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--light);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+.td-title{color:var(--white);font-weight:400;}
+.td-actions{display:flex;gap:.5rem;}
+.tag-pill{display:inline-flex;font-family:"DM Mono",monospace;font-size:.58rem;letter-spacing:.08em;padding:.2rem .55rem;border-radius:4px;border:1px solid;}
+.preview-thumb{width:64px;height:42px;object-fit:cover;border-radius:4px;border:1px solid var(--border);}
+.preview-ph{width:64px;height:42px;border-radius:4px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:.55rem;color:var(--muted);}
+.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2rem;}
+.form-panel h3{font-family:"Geologica",sans-serif;font-weight:200;font-size:1.2rem;letter-spacing:-.01em;margin-bottom:1.5rem;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.9rem;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-family:"DM Mono",monospace;font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.form-input,.form-select,.form-textarea{font-family:"DM Sans",sans-serif;font-size:.87rem;padding:.65rem .9rem;background:var(--off-black);border:1px solid var(--border);border-radius:8px;color:var(--white);outline:none;transition:border-color .2s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent-mid);}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--muted);}
+.form-select{appearance:none;cursor:pointer;}
+.form-select option{background:var(--off-black);}
+.form-textarea{resize:vertical;min-height:90px;}
+.form-actions{display:flex;gap:.7rem;margin-top:1.5rem;}
+.toggle-wrap{display:flex;align-items:center;gap:.8rem;}
+.toggle{position:relative;width:42px;height:22px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:var(--surface);border:1px solid var(--border);border-radius:100px;transition:background .2s;}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:var(--muted);border-radius:50%;transition:all .2s;}
+.toggle input:checked ~ .toggle-track{background:var(--accent-dim);border-color:var(--accent-mid);}
+.toggle input:checked ~ .toggle-thumb{left:23px;background:var(--accent);}
+.toggle-label{font-size:.83rem;color:var(--light);}
+.published-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:"DM Mono",monospace;font-size:.62rem;letter-spacing:.07em;padding:.2rem .6rem;border-radius:4px;}
+.pub-yes{background:var(--green-dim);border:1px solid rgba(74,222,128,.3);color:var(--green);}
+.pub-no{background:rgba(113,113,122,.08);border:1px solid var(--border);color:var(--muted);}
+.toast{position:fixed;bottom:2rem;right:2rem;z-index:9999;padding:.9rem 1.5rem;border-radius:8px;font-family:"DM Mono",monospace;font-size:.75rem;letter-spacing:.06em;display:none;align-items:center;gap:.6rem;}
+.toast.success{background:var(--green-dim);border:1px solid var(--green-mid);color:var(--green);}
+.toast.error{background:var(--red-dim);border:1px solid rgba(248,113,113,.3);color:var(--red);}
+.empty-state{padding:3rem;text-align:center;color:var(--muted);font-family:"DM Mono",monospace;font-size:.75rem;letter-spacing:.07em;line-height:1.8;}
+.uc-hint{background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:8px;padding:.9rem 1.2rem;font-size:.83rem;color:var(--light);margin-bottom:1.5rem;line-height:1.65;}
+.uc-hint strong{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Brunelly <span style="color:var(--accent)">CMS</span></div>
+    <div class="login-sub">Content Manager</div>
+    <input type="password" id="pw-input" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="login-err" id="login-err">Incorrect password</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="cms-header">
+    <div class="cms-title">Brunelly <span>CMS</span></div>
+    <div class="cms-actions">
+      <a href="brunelly-resources.html" target="_blank" class="btn btn-ghost">View site →</a>
+      <a href="brunelly-analytics.html" target="_blank" class="btn btn-ghost">Analytics →</a>
+      <button class="btn btn-primary" id="add-btn" onclick="showAdd()">+ Add New</button>
+      <button class="btn btn-ghost" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="cms-body">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="s-articles">0</div><div class="stat-label">Articles</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-videos-live">0</div><div class="stat-label">Videos Live</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-videos-soon">0</div><div class="stat-label">Videos Coming Soon</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-uc-live">0</div><div class="stat-label">Use Cases Live</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-uc-hidden">0</div><div class="stat-label">Use Cases Hidden</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-images">0/17</div><div class="stat-label">Feature Images</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" id="tab-articles" onclick="switchTab('articles')">Articles</button>
+      <button class="tab" id="tab-videos" onclick="switchTab('videos')">Videos</button>
+      <button class="tab" id="tab-usecases" onclick="switchTab('usecases')">Use Cases</button>
+      <button class="tab" id="tab-images" onclick="switchTab('images')">Feature Images</button>
+      <button class="tab" id="tab-faqs" onclick="switchTab('faqs')">FAQs</button>
+      <button class="tab" id="tab-leads" onclick="switchTab('leads')">Leads</button>
+    </div>
+
+    <!-- ARTICLES VIEW -->
+    <div id="view-articles">
+      <div class="table-toolbar">
+        <h2>Articles <span style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);font-weight:300;" id="art-count"></span></h2>
+        <div style="display:flex;gap:.7rem;">
+          <button class="btn btn-ghost" onclick="exportData('articles')">Export JSON</button>
+          <button class="btn btn-ghost" onclick="triggerImport('articles')">Import JSON</button>
+          <input type="file" id="import-articles" accept=".json" style="display:none" onchange="importData(event,'articles')">
+        </div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="articles-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- VIDEOS VIEW -->
+    <div id="view-videos" style="display:none;">
+      <div class="table-toolbar">
+        <h2>Videos <span style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);font-weight:300;" id="vid-count"></span></h2>
+        <div style="display:flex;gap:.7rem;">
+          <button class="btn btn-ghost" onclick="exportData('videos')">Export JSON</button>
+          <button class="btn btn-ghost" onclick="triggerImport('videos')">Import JSON</button>
+          <input type="file" id="import-videos" accept=".json" style="display:none" onchange="importData(event,'videos')">
+        </div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Thumbnail</th><th>Title</th><th>YouTube URL</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="videos-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- USE CASES VIEW -->
+    <div id="view-usecases" style="display:none;">
+      <div class="uc-hint">
+        <strong>Use Cases section is hidden on the resources page until at least one use case is published.</strong>
+        Toggle a use case to "Published" to make the entire section visible to visitors. Toggle all off to hide it again.
+      </div>
+      <div class="table-toolbar">
+        <h2>Use Cases</h2>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Icon</th><th>Title</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="uc-tbody"></tbody>
+      </table>
+    </div>
+
+
+    <!-- FEATURE IMAGES VIEW -->
+    <div id="view-images" style="display:none;">
+      <div class="table-toolbar">
+        <h2>Feature Page Images</h2>
+        <div style="font-size:.83rem;color:var(--muted);">Paste an image URL for each slot. Changes appear on the live site immediately.</div>
+      </div>
+      <div id="feat-images-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;"></div>
+    </div>
+
+
+
+    <!-- LEADS VIEW -->
+    <div id="view-leads" style="display:none;">
+      <div class="table-toolbar">
+        <h2>Chat Leads <span style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);font-weight:300;" id="leads-count"></span></h2>
+        <div style="display:flex;gap:.7rem;">
+          <button class="btn btn-ghost" onclick="exportLeads()">Export CSV</button>
+          <button class="btn btn-danger" onclick="clearLeads()">Clear all</button>
+        </div>
+      </div>
+      <div style="font-size:.83rem;color:var(--muted);margin-bottom:1.5rem;">
+        Leads captured from the chatbot on the homepage. Names and emails are stored in the visitor's browser until you export them.
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Date</th><th>Page</th></tr></thead>
+        <tbody id="leads-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- FAQs VIEW -->
+    <div id="view-faqs" style="display:none;">
+      <div class="table-toolbar">
+        <h2>FAQs</h2>
+        <div style="font-size:.83rem;color:var(--muted);">Manage FAQs for the Features Hub and Pricing pages separately.</div>
+      </div>
+
+      <!-- Hub FAQs -->
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.3rem;">Features Hub</div>
+            <div style="font-size:.85rem;color:var(--light);">Technical FAQs shown before the CTA on the Features Hub page</div>
+          </div>
+          <button class="btn btn-primary" onclick="showFaqForm('hub')">+ Add FAQ</button>
+        </div>
+        <table class="data-table"><thead><tr><th>#</th><th>Question</th><th>Actions</th></tr></thead>
+        <tbody id="hub-faq-tbody"></tbody></table>
+      </div>
+
+      <!-- Pricing FAQs -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#60a5fa;margin-bottom:.3rem;">Pricing Page</div>
+            <div style="font-size:.85rem;color:var(--light);">Billing and plan FAQs shown on the Pricing page</div>
+          </div>
+          <button class="btn btn-primary" onclick="showFaqForm('pricing')">+ Add FAQ</button>
+        </div>
+        <table class="data-table"><thead><tr><th>#</th><th>Question</th><th>Actions</th></tr></thead>
+        <tbody id="pricing-faq-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- FAQ FORM -->
+    <div id="view-faq-form" style="display:none;">
+      <div class="form-panel">
+        <h3 id="faq-form-heading">Add FAQ</h3>
+        <input type="hidden" id="faq-form-page" value="hub">
+        <input type="hidden" id="faq-form-idx" value="">
+        <div class="form-group">
+          <label>Question *</label>
+          <input type="text" id="ff-q" class="form-input" placeholder="e.g. How does Brunelly read my codebase?" />
+        </div>
+        <div class="form-group">
+          <label>Answer *</label>
+          <textarea id="ff-a" class="form-textarea" style="min-height:140px;" placeholder="Full answer — plain text, no HTML needed"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveFaq()">Save FAQ</button>
+          <button class="btn btn-ghost" onclick="cancelFaqForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM (shared) -->
+    <div id="view-form" style="display:none;margin-top:0;">
+      <div class="form-panel">
+        <h3 id="form-heading">Add New Article</h3>
+        <input type="hidden" id="form-type" value="article">
+        <input type="hidden" id="form-idx" value="">
+
+        <!-- ARTICLE FIELDS -->
+        <div id="fields-article">
+          <div class="form-grid">
+            <div class="form-group full"><label>Title *</label><input type="text" id="f-title" class="form-input" placeholder="Article title" /></div>
+            <div class="form-group full"><label>Excerpt *</label><textarea id="f-excerpt" class="form-textarea" placeholder="Short summary (1–2 sentences shown on the resources page)"></textarea></div>
+            <div class="form-group"><label>Category *</label>
+              <select id="f-category" class="form-select">
+                <option value="">Select category</option>
+                <option value="AI">AI</option>
+                <option value="Agile">Agile</option>
+                <option value="ChatGPT &amp; AI Orchestration">ChatGPT &amp; AI Orchestration</option>
+                <option value="Behind the Build">Behind the Build</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Date</label><input type="text" id="f-date" class="form-input" placeholder="e.g. April 2026" /></div>
+            <div class="form-group full"><label>Article URL *</label><input type="url" id="f-url" class="form-input" placeholder="https://brunelly.com/article-slug/" /></div>
+            <div class="form-group full"><label>Cover Image URL</label><input type="url" id="f-image" class="form-input" placeholder="https://..." oninput="previewImg()" /><img id="img-prev" style="margin-top:.5rem;max-height:70px;border-radius:6px;border:1px solid var(--border);display:none;" /></div>
+          </div>
+        </div>
+
+        <!-- VIDEO FIELDS -->
+        <div id="fields-video" style="display:none;">
+          <div class="form-grid">
+            <div class="form-group full"><label>Video Title *</label><input type="text" id="fv-title" class="form-input" placeholder="Video title" /></div>
+            <div class="form-group full"><label>Description</label><textarea id="fv-desc" class="form-textarea" placeholder="Short description of what this video covers"></textarea></div>
+            <div class="form-group full"><label>YouTube URL</label><input type="url" id="fv-url" class="form-input" placeholder="https://youtu.be/..." oninput="extractYouTubeId()" /></div>
+            <div class="form-group full"><label>YouTube Video ID (auto-filled)</label><input type="text" id="fv-ytid" class="form-input" placeholder="e.g. DWwjalfXJ3I" readonly style="opacity:.6;" /></div>
+            <div class="form-group"><label>Duration</label><input type="text" id="fv-dur" class="form-input" placeholder="e.g. 5:32" /></div>
+            <div class="form-group"><label>Status</label>
+              <div class="toggle-wrap" style="margin-top:.5rem;">
+                <label class="toggle"><input type="checkbox" id="fv-pub"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                <span class="toggle-label">Published (visible on site)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USE CASE FIELDS -->
+        <div id="fields-uc" style="display:none;">
+          <div class="form-grid">
+            <div class="form-group full"><label>Title *</label><input type="text" id="fuc-title" class="form-input" placeholder="Use case title" /></div>
+            <div class="form-group full"><label>Body *</label><textarea id="fuc-body" class="form-textarea" placeholder="2–3 sentences describing the use case"></textarea></div>
+            <div class="form-group"><label>Icon (emoji or symbol)</label><input type="text" id="fuc-icon" class="form-input" placeholder="e.g. ◈ or 🚀" /></div>
+            <div class="form-group"><label>Icon colour</label><input type="color" id="fuc-color" class="form-input" value="#a78bfa" style="height:38px;padding:.2rem;" /></div>
+            <div class="form-group full"><label>Status</label>
+              <div class="toggle-wrap" style="margin-top:.5rem;">
+                <label class="toggle"><input type="checkbox" id="fuc-pub"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                <span class="toggle-label">Published (shows on site)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveItem()">Save</button>
+          <button class="btn btn-ghost" onclick="cancelForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cms-body -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PASS = 'brunelly2026';
+const ARTICLE_SEED = [{"id": "1", "title": "Vibe Coding Isn't Bad, You Are", "excerpt": "Most startups now splash AI on to all their marketing. AI is not your product. AI itself does not deliver business value. Unless you are a frontier lab, AI is nothing more than a tool in your stack.", "category": "AI", "url": "https://brunelly.com/vibe-coding-isnt-bad-you-are/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2026/03/P6564icture1-e1773203362723.webp?fit=621%2C447&ssl=1", "date": "March 2026"}, {"id": "2", "title": "Your AI Product Is Not A Real Business", "excerpt": "Most startups now splash AI on to all their marketing. AI is not your product. AI itself does not deliver business value. Unless you are a frontier lab, AI is nothing more than a tool in your stack.", "category": "AI", "url": "https://brunelly.com/your-ai-product-is-not-a-real-business/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2026/02/Untitled-design.webp?fit=624%2C416&ssl=1", "date": "February 2026"}, {"id": "3", "title": "How many Rs are there really in strawberry?", "excerpt": "How many Rs are there in the word strawberry? AI can't tell you. Apparently. You've all seen it. Screenshots, Reddit threads, smug tweets.", "category": "AI", "url": "https://brunelly.com/how-many-rs-are-there-really-in-strawberry/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2026/02/Substack-Images-7.webp?fit=800%2C533&ssl=1", "date": "February 2026"}, {"id": "4", "title": "Part 2: AI context in the real-world", "excerpt": "Learn to manage AI context with trimming, rolling, compaction, and memory strategies to boost performance and reduce costs.", "category": "Agile", "url": "https://brunelly.com/part-2-ai-context-in-the-real-world/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2026/02/AI-context-in-real-apps.webp?fit=624%2C416&ssl=1", "date": "February 2026"}, {"id": "5", "title": "Part 1: Managing your AI context in real apps", "excerpt": "Learn how to manage AI context in real applications using trimming, rolling context, compaction, and memory strategies to improve performance and reduce cost.", "category": "Agile", "url": "https://brunelly.com/part-1-managing-your-ai-context-in-real-apps/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2026/02/Substack-Images-5.webp?fit=800%2C533&ssl=1", "date": "February 2026"}, {"id": "6", "title": "From ScrumBuddy to Brunelly: Bad Requirements Are Still Killing Software Projects", "excerpt": "From ScrumBuddy to Brunelly: Why bad requirements still break software and how structured, AI-driven workflows turn ideas into successful products.", "category": "Behind the Build", "url": "https://brunelly.com/from-scrumbuddy-to-brunelly-bad-requirements-are-still-killing-software-projects/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2026/02/Substack-Images-1.webp?fit=800%2C533&ssl=1", "date": "February 2026"}, {"id": "7", "title": "I Built a Compiler in Five Days with Claude AI", "excerpt": "This exercise was both for fun and a necessity. The orchestration system powering Brunelly, my AI tool, had gotten messy.", "category": "ChatGPT & AI Orchestration", "url": "https://brunelly.com/compiler-built-with-claude-ai/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2025/09/I-Built-a-Compiler-in-Five-Days-with-Claude-AI-1.jpg?fit=800%2C576&ssl=1", "date": "September 2025"}, {"id": "8", "title": "Why I Put Claude in Jail and Let Him Code Anyway", "excerpt": "AI vibe coding is fun but chaotic. Here's how I built a containerized orchestration system that turned Claude AI code generation into secure, production-ready workflows.", "category": "Behind the Build", "url": "https://brunelly.com/claude-ai-coding-orchestration-containerized-workflows/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2025/09/thumbnail-.jpg?fit=800%2C576&ssl=1", "date": "September 2025"}, {"id": "9", "title": "The Censor Behind the Curtain: The Hidden Orchestration Behind ChatGPT5", "excerpt": "There's another side to GPT5 that has bigger consequences: censorship, fact-checking, and how the system decides what you see.", "category": "ChatGPT & AI Orchestration", "url": "https://brunelly.com/the-censor-behind-the-curtain/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2025/09/Coco-Loco_Posts-e1756793759482.png?fit=800%2C512&ssl=1", "date": "September 2025"}, {"id": "10", "title": "Why GPT-5 Feels Like a Stranger", "excerpt": "GPT-5 feels different. Not because of the model, but because of orchestration. Discover how routing agents, memory placement, and system tweaks change ChatGPT5's tone, accuracy, and personality.", "category": "ChatGPT & AI Orchestration", "url": "https://brunelly.com/why-gpt5-feels-like-a-stranger-orchestration-changes/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2025/09/pexels-bertellifotografia-16027813-1-scaled.jpg?fit=800%2C454&ssl=1", "date": "September 2025"}, {"id": "11", "title": "Inside ChatGPT's Safety Net: What Really Happens When You Cross the Line", "excerpt": "ChatGPT's orchestration is the most interesting part of ChatGPT. The orchestration isn't just a helpful assistant, it's also the bouncer, the censor, and the crisis manager.", "category": "ChatGPT & AI Orchestration", "url": "https://brunelly.com/inside-chatgpts-safety-net/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2025/09/pexels-sylvain-cls-3918566-5866051-1-1-scaled.jpg?fit=800%2C450&ssl=1", "date": "September 2025"}, {"id": "12", "title": "The Secret System Behind ChatGPT: How Orchestration Affects Everything", "excerpt": "Ever had ChatGPT forget your chat history? Have you noticed sudden personality changes mid-chat? Find out how AI orchestration is the reason that happens.", "category": "ChatGPT & AI Orchestration", "url": "https://brunelly.com/the-secret-system-behind-chatgpt/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2025/09/pexels-googledeepmind-18069697-1.jpg?fit=800%2C450&ssl=1", "date": "September 2025"}, {"id": "13", "title": "The Hidden Beast Behind ChatGPT: How AI Orchestration Shapes Every Conversation", "excerpt": "Discover the hidden orchestration system behind ChatGPT that controls memory, tone, safety, and tools. Learn why it matters for AI users and builders.", "category": "ChatGPT & AI Orchestration", "url": "https://brunelly.com/chatgpt-orchestration/", "image": "https://i0.wp.com/brunelly.com/wp-content/uploads/2025/09/pexels-nemuel-6424590-1.jpg?fit=800%2C533&ssl=1", "date": "September 2025"}];
+const VIDEO_SEED   = [{"id": "v1", "title": "Platform Overview", "description": "A comprehensive walkthrough of the Brunelly platform and its core capabilities.", "youtubeUrl": "https://youtu.be/DWwjalfXJ3I?si=d4zf0kKWeTkwYWIW", "youtubeId": "DWwjalfXJ3I", "duration": "", "published": true}, {"id": "v2", "title": "Signup & Onboarding", "description": "The first-run experience from account creation through project setup.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v3", "title": "Feature Backlog Generation", "description": "AI-powered generation of a structured feature backlog from high-level requirements.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v4", "title": "Story Backlog Generation", "description": "Breaking features down into implementable user stories with acceptance criteria.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v5", "title": "Code Generation", "description": "Automated code generation from story specifications with full context awareness.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v6", "title": "Documentation Generation", "description": "Generating technical documentation, design documents, and specifications.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v7", "title": "Tech Expert", "description": "Interactive AI technical advisor for architecture decisions and code guidance.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v8", "title": "Testing", "description": "Automated test plan generation and test execution capabilities.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v9", "title": "Bug Hunt", "description": "AI-driven static analysis and bug detection across the codebase.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v10", "title": "Code Quality, Security & Risk Assessment", "description": "Comprehensive quality analysis, security scanning, and risk scoring.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v11", "title": "Code Reviews", "description": "AI-assisted code review with actionable feedback and suggestions.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v12", "title": "Repository Initialisation", "description": "Setting up a new repository with best-practice structure and configuration.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}, {"id": "v13", "title": "Code Engine Selection", "description": "Selecting and configuring the AI code generation engine for your project.", "youtubeUrl": "", "youtubeId": "", "duration": "", "published": false}];
+const UC_SEED      = [{"id": "uc1", "icon": "\u25c8", "iconBg": "rgba(167,139,250,.12)", "iconColor": "#a78bfa", "title": "Modernising a legacy system without breaking what works", "body": "Brunelly reads a complex brownfield codebase, maps its architecture and dependencies, and generates a safe, prioritised modernisation roadmap \u2014 so teams can move forward without breaking production.", "published": false}, {"id": "uc2", "icon": "\u2b21", "iconBg": "rgba(59,130,246,.1)", "iconColor": "#60a5fa", "title": "Scaling an engineering team from 5 to 25 without losing velocity", "body": "As teams grow, context gets fragmented. Brunelly acts as institutional memory \u2014 new engineers onboard faster, architectural decisions stay consistent, and no one has to re-explain sprint three decisions.", "published": false}, {"id": "uc3", "icon": "\u26a1", "iconBg": "rgba(74,222,128,.1)", "iconColor": "#4ade80", "title": "Building greenfield software with architectural integrity from day one", "body": "Starting fresh gives you the opportunity to get the architecture right. Brunelly shapes your system from the first conversation and maintains that integrity through every sprint.", "published": false}, {"id": "uc4", "icon": "\ud83d\udee1\ufe0f", "iconBg": "rgba(251,146,60,.1)", "iconColor": "#fb923c", "title": "Meeting compliance requirements without slowing delivery", "body": "For teams building under GDPR, SOC2, or other frameworks, Brunelly builds those constraints into its context \u2014 so security and compliance checks happen automatically, not as afterthoughts.", "published": false}];
+
+// ── Auth ──────────────────────────────────────────────────────────
+function doLogin(){
+  if(document.getElementById('pw-input').value===PASS){
+    sessionStorage.setItem('cms_auth','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    init();
+  } else {
+    document.getElementById('login-err').style.display='block';
+    document.getElementById('pw-input').value='';
+  }
+}
+function logout(){sessionStorage.removeItem('cms_auth');location.reload();}
+if(sessionStorage.getItem('cms_auth')==='1'){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+// ── Storage ───────────────────────────────────────────────────────
+function getItems(type){
+  const key={'articles':'brunelly_articles','videos':'brunelly_videos','usecases':'brunelly_usecases'}[type];
+  const seed={'articles':ARTICLE_SEED,'videos':VIDEO_SEED,'usecases':UC_SEED}[type];
+  try{const s=localStorage.getItem(key);if(s){const p=JSON.parse(s);if(p&&p.length>0)return p;}}catch(e){}
+  return JSON.parse(JSON.stringify(seed));
+}
+function saveItems(type,arr){
+  const key={'articles':'brunelly_articles','videos':'brunelly_videos','usecases':'brunelly_usecases'}[type];
+  localStorage.setItem(key,JSON.stringify(arr));
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────
+let currentTab='articles';
+function switchTab(t){
+  currentTab=t;
+  ['articles','videos','usecases','images','faqs','leads'].forEach(id=>{
+    document.getElementById('view-'+id).style.display=id===t?'block':'none';
+    document.getElementById('tab-'+id).classList.toggle('active',id===t);
+  });
+  document.getElementById('view-form').style.display='none';
+  const labels={'articles':'+ Add Article','videos':'+ Add Video','usecases':'+ Add Use Case','images':'Feature Images','faqs':'+ Add FAQ'};
+  document.getElementById('add-btn').textContent=labels[t]||'+';
+  document.getElementById('add-btn').style.display=(t==='images'||t==='faqs'||t==='leads')?'none':'inline-flex';
+  render();
+}
+
+// ── Stats ─────────────────────────────────────────────────────────
+function updateStats(){
+  const arts=getItems('articles');
+  const vids=getItems('videos');
+  const ucs=getItems('usecases');
+  document.getElementById('s-articles').textContent=arts.length;
+  document.getElementById('s-videos-live').textContent=vids.filter(v=>v.published&&v.youtubeId).length;
+  document.getElementById('s-videos-soon').textContent=vids.filter(v=>!v.published||!v.youtubeId).length;
+  document.getElementById('s-uc-live').textContent=ucs.filter(u=>u.published).length;
+  document.getElementById('s-uc-hidden').textContent=ucs.filter(u=>!u.published).length;
+}
+
+// ── Render tables ─────────────────────────────────────────────────
+const CC={'AI':'#a78bfa','Agile':'#60a5fa','ChatGPT & AI Orchestration':'#fb923c','Behind the Build':'#4ade80'};
+const CB={'AI':'rgba(167,139,250,.4)','Agile':'rgba(96,165,250,.3)','ChatGPT & AI Orchestration':'rgba(251,146,60,.3)','Behind the Build':'rgba(74,222,128,.3)'};
+const CBG={'AI':'rgba(167,139,250,.12)','Agile':'rgba(96,165,250,.1)','ChatGPT & AI Orchestration':'rgba(251,146,60,.1)','Behind the Build':'rgba(74,222,128,.1)'};
+
+function renderArticles(){
+  const arts=getItems('articles');
+  document.getElementById('art-count').textContent='('+arts.length+')';
+  document.getElementById('articles-tbody').innerHTML=arts.length
+    ? arts.map((a,i)=>`<tr>
+        <td>${a.image?`<img src="${a.image}" class="preview-thumb" onerror="this.style.display='none'">`:'<div class="preview-ph">No img</div>'}</td>
+        <td class="td-title" style="max-width:260px;">${a.title}<br><a href="${a.url}" target="_blank" style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--accent);text-decoration:none;">↗ view</a></td>
+        <td><span class="tag-pill" style="color:${CC[a.category]||'#a78bfa'};border-color:${CB[a.category]||'rgba(167,139,250,.4)'};background:${CBG[a.category]||'rgba(167,139,250,.12)'};font-size:.58rem;">${a.category}</span></td>
+        <td style="font-family:'DM Mono',monospace;font-size:.7rem;">${a.date||'—'}</td>
+        <td class="td-actions"><button class="btn btn-ghost" onclick="editItem('articles',${i})">Edit</button><button class="btn btn-danger" onclick="deleteItem('articles',${i})">Delete</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" class="empty-state">No articles yet.</td></tr>';
+}
+
+function renderVideos(){
+  const vids=getItems('videos');
+  document.getElementById('vid-count').textContent='('+vids.length+')';
+  document.getElementById('videos-tbody').innerHTML=vids.length
+    ? vids.map((v,i)=>{
+        const thumb=v.youtubeId?`https://img.youtube.com/vi/${v.youtubeId}/default.jpg`:'';
+        return `<tr>
+          <td>${thumb?`<img src="${thumb}" class="preview-thumb">`:'<div class="preview-ph">No YT</div>'}</td>
+          <td class="td-title">${v.title}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.youtubeUrl||'—'}</td>
+          <td><span class="published-badge ${v.published&&v.youtubeId?'pub-yes':'pub-no'}">${v.published&&v.youtubeId?'● Live':'○ Coming soon'}</span></td>
+          <td class="td-actions"><button class="btn btn-ghost" onclick="editItem('videos',${i})">Edit</button><button class="btn btn-danger" onclick="deleteItem('videos',${i})">Delete</button></td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="5" class="empty-state">No videos yet.</td></tr>';
+}
+
+function renderUseCases(){
+  const ucs=getItems('usecases');
+  document.getElementById('uc-tbody').innerHTML=ucs.length
+    ? ucs.map((uc,i)=>`<tr>
+        <td><div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;background:${uc.iconBg||'var(--accent-dim)'};color:${uc.iconColor||'var(--accent)'};border:1px solid var(--border);">${uc.icon||'◈'}</div></td>
+        <td class="td-title" style="max-width:340px;">${uc.title}</td>
+        <td>
+          <span class="published-badge ${uc.published?'pub-yes':'pub-no'}">${uc.published?'● Published':'○ Hidden'}</span>
+          <label class="toggle" style="margin-left:.8rem;vertical-align:middle;" title="Toggle visibility">
+            <input type="checkbox" ${uc.published?'checked':''} onchange="toggleUC(${i},this.checked)">
+            <div class="toggle-track"></div><div class="toggle-thumb"></div>
+          </label>
+        </td>
+        <td class="td-actions"><button class="btn btn-ghost" onclick="editItem('usecases',${i})">Edit</button><button class="btn btn-danger" onclick="deleteItem('usecases',${i})">Delete</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" class="empty-state">No use cases yet.</td></tr>';
+}
+
+function toggleUC(idx,val){
+  const ucs=getItems('usecases');
+  ucs[idx].published=val;
+  saveItems('usecases',ucs);
+  renderUseCases();
+  updateStats();
+  showToast(val?'Use case published — now visible on site':'Use case hidden');
+}
+
+function render(){
+  if(currentTab==='articles')renderArticles();
+  else if(currentTab==='videos')renderVideos();
+  else if(currentTab==='usecases')renderUseCases();
+  else if(currentTab==='images')renderImages();
+  else if(currentTab==='leads')renderLeads();
+  else if(currentTab==='faqs'){renderFaqs();document.getElementById('view-faq-form').style.display='none';}
+  updateStats();
+}
+
+// ── Form ──────────────────────────────────────────────────────────
+function showAdd(){
+  document.getElementById('form-idx').value='';
+  document.getElementById('form-type').value=currentTab==='usecases'?'uc':currentTab==='videos'?'video':'article';
+  const labels={'articles':'Add New Article','videos':'Add New Video','usecases':'Add New Use Case'};
+  document.getElementById('form-heading').textContent=labels[currentTab];
+  resetFormFields();
+  showFormView();
+}
+
+function showFormView(){
+  ['articles','videos','usecases'].forEach(id=>document.getElementById('view-'+id).style.display='none');
+  document.getElementById('view-form').style.display='block';
+  const t=document.getElementById('form-type').value;
+  document.getElementById('fields-article').style.display=t==='article'?'block':'none';
+  document.getElementById('fields-video').style.display=t==='video'?'block':'none';
+  document.getElementById('fields-uc').style.display=t==='uc'?'block':'none';
+}
+
+function cancelForm(){switchTab(currentTab);}
+
+function resetFormFields(){
+  ['f-title','f-excerpt','f-date','f-url','f-image','fv-title','fv-desc','fv-url','fv-ytid','fv-dur','fuc-title','fuc-body','fuc-icon'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const fvpub=document.getElementById('fv-pub'); if(fvpub)fvpub.checked=false;
+  const fucpub=document.getElementById('fuc-pub'); if(fucpub)fucpub.checked=false;
+  const fcat=document.getElementById('f-category'); if(fcat)fcat.value='';
+  const prev=document.getElementById('img-prev'); if(prev)prev.style.display='none';
+  const cc=document.getElementById('fuc-color'); if(cc)cc.value='#a78bfa';
+}
+
+function editItem(type,idx){
+  const items=getItems(type);
+  const item=items[idx];
+  document.getElementById('form-idx').value=idx;
+  const t=type==='usecases'?'uc':type==='videos'?'video':'article';
+  document.getElementById('form-type').value=t;
+  document.getElementById('form-heading').textContent='Edit '+(type==='usecases'?'Use Case':type==='videos'?'Video':'Article');
+  resetFormFields();
+  if(t==='article'){
+    document.getElementById('f-title').value=item.title||'';
+    document.getElementById('f-excerpt').value=item.excerpt||'';
+    document.getElementById('f-category').value=item.category||'';
+    document.getElementById('f-date').value=item.date||'';
+    document.getElementById('f-url').value=item.url||'';
+    document.getElementById('f-image').value=item.image||'';
+    previewImg();
+  } else if(t==='video'){
+    document.getElementById('fv-title').value=item.title||'';
+    document.getElementById('fv-desc').value=item.description||'';
+    document.getElementById('fv-url').value=item.youtubeUrl||'';
+    document.getElementById('fv-ytid').value=item.youtubeId||'';
+    document.getElementById('fv-dur').value=item.duration||'';
+    document.getElementById('fv-pub').checked=item.published||false;
+  } else {
+    document.getElementById('fuc-title').value=item.title||'';
+    document.getElementById('fuc-body').value=item.body||'';
+    document.getElementById('fuc-icon').value=item.icon||'';
+    document.getElementById('fuc-color').value=item.iconColor||'#a78bfa';
+    document.getElementById('fuc-pub').checked=item.published||false;
+  }
+  showFormView();
+}
+
+function deleteItem(type,idx){
+  if(!confirm('Delete this item? This cannot be undone.'))return;
+  const items=getItems(type);
+  items.splice(idx,1);
+  saveItems(type,items);
+  render();
+  showToast('Deleted');
+}
+
+function saveItem(){
+  const t=document.getElementById('form-type').value;
+  const idx=document.getElementById('form-idx').value;
+  const type=t==='uc'?'usecases':t==='video'?'videos':'articles';
+  let item;
+  if(t==='article'){
+    const title=document.getElementById('f-title').value.trim();
+    const excerpt=document.getElementById('f-excerpt').value.trim();
+    const category=document.getElementById('f-category').value;
+    const url=document.getElementById('f-url').value.trim();
+    if(!title||!excerpt||!category||!url){showToast('Fill in all required fields','error');return;}
+    item={id:Date.now().toString(),title,excerpt,category,date:document.getElementById('f-date').value.trim(),url,image:document.getElementById('f-image').value.trim()};
+  } else if(t==='video'){
+    const title=document.getElementById('fv-title').value.trim();
+    if(!title){showToast('Video title is required','error');return;}
+    item={id:idx!==''?getItems('videos')[parseInt(idx)].id:'v'+Date.now(),title,description:document.getElementById('fv-desc').value.trim(),youtubeUrl:document.getElementById('fv-url').value.trim(),youtubeId:document.getElementById('fv-ytid').value.trim(),duration:document.getElementById('fv-dur').value.trim(),published:document.getElementById('fv-pub').checked};
+  } else {
+    const title=document.getElementById('fuc-title').value.trim();
+    const body=document.getElementById('fuc-body').value.trim();
+    if(!title||!body){showToast('Title and body are required','error');return;}
+    const color=document.getElementById('fuc-color').value;
+    item={id:idx!==''?getItems('usecases')[parseInt(idx)].id:'uc'+Date.now(),icon:document.getElementById('fuc-icon').value.trim()||'◈',iconColor:color,iconBg:color+'26',title,body,published:document.getElementById('fuc-pub').checked};
+  }
+  const items=getItems(type);
+  if(idx!=='')items[parseInt(idx)]=item; else items.unshift(item);
+  saveItems(type,items);
+  showToast(idx!==''?'Updated successfully':'Added successfully');
+  switchTab(currentTab);
+}
+
+function previewImg(){
+  const url=document.getElementById('f-image').value.trim();
+  const img=document.getElementById('img-prev');
+  if(url){img.src=url;img.style.display='block';}else{img.style.display='none';}
+}
+
+function extractYouTubeId(){
+  const url=document.getElementById('fv-url').value.trim();
+  const m=url.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/);
+  document.getElementById('fv-ytid').value=m?m[1]:'';
+}
+
+// ── Import / Export ───────────────────────────────────────────────
+function triggerImport(type){document.getElementById('import-'+type).click();}
+function exportData(type){
+  const data=JSON.stringify(getItems(type),null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(data);
+  a.download='brunelly-'+type+'-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  showToast('Exported');
+}
+function importData(event,type){
+  const file=event.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!Array.isArray(data))throw new Error();
+      saveItems(type,data);
+      render();
+      showToast('Imported '+data.length+' items');
+    }catch(e){showToast('Invalid JSON file','error');}
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function showToast(msg,type='success'){
+  const el=document.getElementById('toast');
+  el.textContent=(type==='success'?'✓ ':'✕ ')+msg;
+  el.className='toast '+type;
+  el.style.display='flex';
+  setTimeout(()=>el.style.display='none',3000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+function init(){
+  // Seed data if empty
+  ['articles','videos','usecases'].forEach(t=>{
+    const key={'articles':'brunelly_articles','videos':'brunelly_videos','usecases':'brunelly_usecases'}[t];
+    if(!localStorage.getItem(key)){
+      const seed={'articles':ARTICLE_SEED,'videos':VIDEO_SEED,'usecases':UC_SEED}[t];
+      saveItems(t,JSON.parse(JSON.stringify(seed)));
+    }
+  });
+  render();
+}
+
+if(sessionStorage.getItem('cms_auth')==='1')init();
+
+// ── Feature Images ────────────────────────────────────────────────
+var ALL_FEAT_SLOTS = [{"id": "understand-onboarding", "label": "Smart Onboarding", "hint": "First-run onboarding experience", "page": "brunelly-features-understand.html"}, {"id": "understand-codebase", "label": "Codebase Intelligence", "hint": "Codebase reading and mapping", "page": "brunelly-features-understand.html"}, {"id": "understand-context", "label": "Persistent Context", "hint": "Context retention across sessions", "page": "brunelly-features-understand.html"}, {"id": "plan-architecture", "label": "Concept to Architecture", "hint": "Architecture generation from brief", "page": "brunelly-features-plan.html"}, {"id": "plan-stories", "label": "AI Story Generation", "hint": "User story generation", "page": "brunelly-features-plan.html"}, {"id": "plan-estimation", "label": "Smart Estimation", "hint": "AI effort estimation", "page": "brunelly-features-plan.html"}, {"id": "plan-sprint", "label": "Sprint Health Monitoring", "hint": "Sprint tracking dashboard", "page": "brunelly-features-plan.html"}, {"id": "build-codegen", "label": "Iterative Code Generation", "hint": "Step-by-step code generation", "page": "brunelly-features-build.html"}, {"id": "build-pr", "label": "PR Management", "hint": "Pull request workflow", "page": "brunelly-features-build.html"}, {"id": "build-approval", "label": "Approval Gates", "hint": "Human approval checkpoints", "page": "brunelly-features-build.html"}, {"id": "quality-review", "label": "AI Code Reviews", "hint": "Automated code review output", "page": "brunelly-features-quality.html"}, {"id": "quality-security", "label": "Security Scanning", "hint": "Security scan results", "page": "brunelly-features-quality.html"}, {"id": "quality-bughunter", "label": "Bug Hunter", "hint": "Bug detection interface", "page": "brunelly-features-quality.html"}, {"id": "quality-testing", "label": "Automated Testing", "hint": "Test generation and results", "page": "brunelly-features-quality.html"}, {"id": "collab-chat", "label": "AI Expert Chat", "hint": "AI chat interface", "page": "brunelly-features-collaborate.html"}, {"id": "collab-kanban", "label": "Kanban Boards", "hint": "Kanban board view", "page": "brunelly-features-collaborate.html"}, {"id": "collab-realtime", "label": "Real-Time Collaboration", "hint": "Team collaboration view", "page": "brunelly-features-collaborate.html"}];
+var PAGE_LABELS    = {"brunelly-features-understand.html": "Understand", "brunelly-features-plan.html": "Plan", "brunelly-features-build.html": "Build", "brunelly-features-quality.html": "Quality", "brunelly-features-collaborate.html": "Collaborate"};
+
+function renderImages() {
+  var grid = document.getElementById('feat-images-grid');
+  if (!grid) return;
+  var html = '';
+  var currentPage = '';
+  for (var i = 0; i < ALL_FEAT_SLOTS.length; i++) {
+    var s = ALL_FEAT_SLOTS[i];
+    var stored = localStorage.getItem('brunelly_feat_img_' + s.id) || '';
+    if (s.page !== currentPage) {
+      currentPage = s.page;
+      html += '<div style="grid-column:1/-1;background:var(--surface);padding:.8rem 1.2rem;border-bottom:1px solid var(--border);">'
+            + '<span style="font-family:DM Mono,monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);">'
+            + (PAGE_LABELS[s.page] || s.page) + ' — Feature Page</span></div>';
+    }
+    var thumbHtml = stored
+      ? '<img src="' + stored + '" style="width:72px;height:48px;object-fit:cover;border-radius:5px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.opacity=0.3">'
+      : '<div style="width:72px;height:48px;border-radius:5px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:.55rem;color:var(--muted);flex-shrink:0;text-align:center;line-height:1.3;">No<br>image</div>';
+    var statusBadge = stored
+      ? '<span style="font-family:DM Mono,monospace;font-size:.6rem;padding:.18rem .5rem;border-radius:4px;background:var(--green-dim);border:1px solid rgba(74,222,128,.3);color:var(--green);">&#10003; Live</span>'
+      : '<span style="font-family:DM Mono,monospace;font-size:.6rem;padding:.18rem .5rem;border-radius:4px;background:var(--border);color:var(--muted);">Empty</span>';
+    var clearBtn = stored
+      ? '<button onclick="clearFeatImage(\'' + s.id + '\')" class="btn btn-danger" style="font-size:.62rem;padding:.3rem .6rem;flex-shrink:0;">Clear</button>'
+      : '';
+    html += '<div style="background:var(--off-black);padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;border-bottom:1px solid var(--border);">'
+          + thumbHtml
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.3rem;">'
+          + '<span style="font-size:.88rem;color:var(--white);">' + s.label + '</span>'
+          + statusBadge
+          + '</div>'
+          + '<div style="font-size:.74rem;color:var(--muted);margin-bottom:.5rem;">' + s.hint + '</div>'
+          + '<input type="url" placeholder="Paste image URL (https://...)" value="' + stored.replace(/"/g, '&quot;') + '" data-slot="' + s.id + '" onchange="saveFeatImage(this)" class="form-input" style="font-size:.78rem;padding:.4rem .7rem;" />'
+          + '</div>'
+          + clearBtn
+          + '</div>';
+  }
+  grid.innerHTML = html;
+  updateImageStat();
+}
+
+function saveFeatImage(input) {
+  var slotId = input.getAttribute('data-slot');
+  var url = input.value.trim();
+  if (url) {
+    localStorage.setItem('brunelly_feat_img_' + slotId, url);
+    showToast('Image saved — visible on the feature page immediately');
+  } else {
+    localStorage.removeItem('brunelly_feat_img_' + slotId);
+  }
+  renderImages();
+}
+
+function clearFeatImage(slotId) {
+  localStorage.removeItem('brunelly_feat_img_' + slotId);
+  renderImages();
+  showToast('Image cleared');
+}
+
+function updateImageStat() {
+  var count = ALL_FEAT_SLOTS.filter(function(s) {
+    return !!localStorage.getItem('brunelly_feat_img_' + s.id);
+  }).length;
+  var el = document.getElementById('s-images');
+  if (el) el.textContent = count + '/' + ALL_FEAT_SLOTS.length;
+}
+
+
+// ── FAQs ──────────────────────────────────────────────────────────
+var HUB_FAQ_SEED     = [{"id": "hf1", "q": "How does Brunelly actually read my codebase?", "a": "When you connect a repository, Brunelly analyses your file structure, dependencies, patterns, and architecture using static analysis \u2014 no code is stored on our servers. It builds a persistent context model that understands how your system fits together, which it uses to inform every planning, generation, and review task."}, {"id": "hf2", "q": "What languages and frameworks does Brunelly support?", "a": "Brunelly supports all major languages including JavaScript, TypeScript, Python, Java, C#, Go, Ruby, PHP, and more. It works across frontend frameworks (React, Vue, Angular), backend stacks (Node, Django, Spring, .NET), and infrastructure-as-code. If your team writes it, Brunelly can read and generate it."}, {"id": "hf3", "q": "Does it work with existing codebases or only greenfield projects?", "a": "Both. Brunelly is specifically built for complex brownfield systems \u2014 the ones where most AI tools fall over because they lack context. Connect your existing repo and Brunelly maps what it finds, flags technical debt, and starts generating context-aware work immediately. Greenfield projects benefit from architectural guidance from day one."}, {"id": "hf4", "q": "How is Brunelly different from GitHub Copilot or Cursor?", "a": "Copilot and Cursor are autocomplete tools \u2014 they help individual developers write code faster in their editor. Brunelly operates at the project level across the full delivery lifecycle: requirements, architecture, planning, code generation, review, testing, and team collaboration. It holds the context of your entire system, not just the file you have open."}, {"id": "hf5", "q": "Can I control what Brunelly generates? What if I disagree with it?", "a": "Yes \u2014 human approval is built into every step. Brunelly generates suggestions and you approve, edit, or reject them before anything is committed. You set the architectural constraints and technology choices upfront. Brunelly works within them, not around them. You are always in control of what gets built."}, {"id": "hf6", "q": "How does context persist across my team?", "a": "Project context is shared across everyone on your plan. When one engineer updates a decision or Brunelly learns something new about your architecture, the whole team benefits immediately. This is particularly powerful for onboarding \u2014 new engineers get up to speed with the same context the rest of the team has been building for months."}, {"id": "hf7", "q": "What version control systems does Brunelly integrate with?", "a": "Brunelly integrates with GitHub, GitLab, Azure DevOps, and Bitbucket. Connection takes under 5 minutes and requires no migration or changes to your existing workflow. Your code stays in your repository \u2014 Brunelly reads it, doesn't own it."}, {"id": "hf8", "q": "Is Brunelly suitable for regulated industries?", "a": "Yes. Enterprise plans include options for dedicated infrastructure, compliance controls, SOC2 alignment, and GDPR compliance. Security scanning and quality gates are built into the platform by default, not bolted on as an afterthought. If you have specific compliance requirements, talk to our team and we can tailor the setup."}];
+var PRICING_FAQ_SEED = [{"id": "pf1", "q": "What happens if I run out of credits?", "a": "AI-powered operations will pause until you top up. Your projects, code, and data remain fully accessible \u2014 only new AI operations are paused. You can top up instantly in the app or enable auto top-up to avoid any interruption."}, {"id": "pf2", "q": "Do unused credits roll over?", "a": "Monthly plan credits reset at the start of each billing cycle and do not roll over. Purchased top-up credits are valid for 30 days from the date of purchase."}, {"id": "pf3", "q": "Can I switch plans at any time?", "a": "Yes \u2014 you can upgrade at any time and the change takes effect immediately. Downgrades take effect at the end of your current billing period. Annual subscribers can upgrade mid-year and we will prorate the difference."}, {"id": "pf4", "q": "What is the minimum commitment for Business and Enterprise?", "a": "Business requires a minimum of 5 seats and Enterprise a minimum of 25 seats. Both are available on monthly or annual billing. Enterprise plans can be customised \u2014 talk to our sales team for bespoke arrangements."}, {"id": "pf5", "q": "Is my code and data secure?", "a": "Yes. Brunelly connects to your existing repositories \u2014 we never store your source code on our servers. Enterprise plans include options for dedicated infrastructure, on-premise deployment, and compliance controls including SOC2 and GDPR."}, {"id": "pf6", "q": "Can I try Brunelly before committing to a paid plan?", "a": "Absolutely \u2014 the Starter plan is free forever with no credit card required. Connect your repo, explore the platform, and upgrade when you are ready. You can also book a live demo with our team to see Brunelly working on a real codebase."}, {"id": "pf7", "q": "What integrations does Brunelly support?", "a": "Brunelly integrates with GitHub, GitLab, Azure DevOps, and Bitbucket \u2014 no migration required. Enterprise plans include RESTful API and webhook support for custom integrations with your existing toolchain."}];
+
+function getFaqs(page) {
+  var key = page === 'hub' ? 'brunelly_faqs_hub' : 'brunelly_faqs_pricing';
+  var seed = page === 'hub' ? HUB_FAQ_SEED : PRICING_FAQ_SEED;
+  try {
+    var s = localStorage.getItem(key);
+    if (s) { var p = JSON.parse(s); if (p && p.length > 0) return p; }
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(seed));
+}
+function saveFaqs(page, arr) {
+  var key = page === 'hub' ? 'brunelly_faqs_hub' : 'brunelly_faqs_pricing';
+  localStorage.setItem(key, JSON.stringify(arr));
+}
+
+function renderFaqs() {
+  ['hub','pricing'].forEach(function(page) {
+    var faqs = getFaqs(page);
+    var tbody = document.getElementById(page + '-faq-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = faqs.length
+      ? faqs.map(function(f, i) {
+          return '<tr>'
+               + '<td style="font-family:DM Mono,monospace;font-size:.7rem;color:var(--muted);width:32px;">' + (i+1) + '</td>'
+               + '<td class="td-title" style="max-width:500px;">' + f.q + '</td>'
+               + '<td class="td-actions">'
+               + '<button class="btn btn-ghost" onclick="editFaq(\'' + page + '\',' + i + ')">Edit</button>'
+               + '<button class="btn btn-danger" onclick="deleteFaq(\'' + page + '\',' + i + ')">Delete</button>'
+               + '</td></tr>';
+        }).join('')
+      : '<tr><td colspan="3" class="empty-state">No FAQs yet.</td></tr>';
+  });
+}
+
+function showFaqForm(page, idx) {
+  document.getElementById('view-faqs').style.display = 'none';
+  document.getElementById('view-faq-form').style.display = 'block';
+  document.getElementById('faq-form-page').value = page;
+  document.getElementById('faq-form-idx').value = (idx !== undefined) ? idx : '';
+  document.getElementById('ff-q').value = '';
+  document.getElementById('ff-a').value = '';
+  var label = page === 'hub' ? 'Features Hub' : 'Pricing Page';
+  document.getElementById('faq-form-heading').textContent = (idx !== undefined ? 'Edit' : 'Add') + ' FAQ — ' + label;
+  if (idx !== undefined) {
+    var f = getFaqs(page)[idx];
+    document.getElementById('ff-q').value = f.q;
+    document.getElementById('ff-a').value = f.a;
+  }
+}
+
+function editFaq(page, idx) { showFaqForm(page, idx); }
+
+function cancelFaqForm() {
+  document.getElementById('view-faq-form').style.display = 'none';
+  document.getElementById('view-faqs').style.display = 'block';
+  renderFaqs();
+}
+
+function saveFaq() {
+  var page = document.getElementById('faq-form-page').value;
+  var idx  = document.getElementById('faq-form-idx').value;
+  var q    = document.getElementById('ff-q').value.trim();
+  var a    = document.getElementById('ff-a').value.trim();
+  if (!q || !a) { showToast('Question and answer are both required', 'error'); return; }
+  var faqs = getFaqs(page);
+  var item = { id: (idx !== '' ? faqs[parseInt(idx)].id : 'faq-' + Date.now()), q: q, a: a };
+  if (idx !== '') faqs[parseInt(idx)] = item;
+  else faqs.push(item);
+  saveFaqs(page, faqs);
+  showToast('FAQ saved — live on site immediately');
+  cancelFaqForm();
+}
+
+function deleteFaq(page, idx) {
+  if (!confirm('Delete this FAQ?')) return;
+  var faqs = getFaqs(page);
+  faqs.splice(idx, 1);
+  saveFaqs(page, faqs);
+  renderFaqs();
+  showToast('FAQ deleted');
+}
+
+
+// ── Leads ─────────────────────────────────────────────────────────
+function renderLeads() {
+  try {
+    var leads = JSON.parse(localStorage.getItem('brunelly_leads') || '[]').reverse();
+    document.getElementById('leads-count').textContent = '(' + leads.length + ')';
+    var tbody = document.getElementById('leads-tbody');
+    if (!leads.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No leads captured yet. The chatbot on the homepage will capture name and email when visitors ask to talk to the team.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = leads.map(function(l) {
+      var d = new Date(l.ts).toLocaleString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      return '<tr>'
+           + '<td style="color:var(--white);">' + (l.name || '—') + '</td>'
+           + '<td><a href="mailto:' + l.email + '" style="color:var(--accent);text-decoration:none;">' + l.email + '</a></td>'
+           + '<td style="font-family:DM Mono,monospace;font-size:.7rem;color:var(--muted);">' + d + '</td>'
+           + '<td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Homepage</td>'
+           + '</tr>';
+    }).join('');
+  } catch(e) {
+    document.getElementById('leads-tbody').innerHTML = '<tr><td colspan="4" class="empty-state">Error loading leads.</td></tr>';
+  }
+}
+
+function exportLeads() {
+  var leads = JSON.parse(localStorage.getItem('brunelly_leads') || '[]');
+  if (!leads.length) { showToast('No leads to export', 'error'); return; }
+  var rows = [['Name','Email','Date','Page']];
+  leads.forEach(function(l) {
+    rows.push([l.name||'', l.email||'', new Date(l.ts).toISOString(), 'Homepage']);
+  });
+  var csv = rows.map(function(r) {
+    return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(',');
+  }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'brunelly-leads-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast('Leads exported');
+}
+
+function clearLeads() {
+  if (!confirm('Clear all leads? This cannot be undone.')) return;
+  localStorage.removeItem('brunelly_leads');
+  renderLeads();
+  showToast('Leads cleared');
+}
+
+</script>
+</body>
+</html>
